@@ -1,6 +1,7 @@
 (function unbookmarkAll() {
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const randomDelay = () => delay(5000 + Math.random() * 1000); // 5–6 seconds
+    const randomDelay = () => delay(1000 + Math.random() * 1000); // 1–2 seconds between each click
+    const chunkPause = () => delay(10000); // 10-second pause after every 10 unbookmarks
 
     async function scrollOneViewport() {
         const viewportHeight = window.innerHeight;
@@ -14,8 +15,8 @@
         const selector = 'button[data-testid="removeBookmark"]';
         let iterationCount = 0;
         const maxIterations = 50;
-        let lastCount = -1;
         let totalUnbookmarked = 0;
+        let chunkCounter = 0;
 
         function ordinal(n) {
             const s = ["th", "st", "nd", "rd"],
@@ -24,32 +25,30 @@
         }
 
         while (iterationCount < maxIterations) {
-            const buttons = Array.from(document.querySelectorAll(selector));
-            if (buttons.length === 0 && iterationCount === 0) {
-                console.error("❌ No bookmarks found. Make sure you're on https://x.com/i/bookmarks and tweets are fully loaded.");
-                return;
+            const button = document.querySelector(selector);
+
+            if (!button) {
+                console.log("📜 No more bookmarks found. Scrolling down...");
+                await scrollOneViewport();
+                iterationCount++;
+                continue;
             }
 
-            if (buttons.length === 0 || buttons.length === lastCount) {
-                break;
+            try {
+                button.click();
+                totalUnbookmarked++;
+                chunkCounter++;
+                console.log(`🗑️ Unbookmarked ${ordinal(totalUnbookmarked)} tweet.`);
+                await randomDelay();
+            } catch (err) {
+                console.warn("⚠️ Failed to click a bookmark button:", err);
             }
 
-            lastCount = buttons.length;
-
-            for (const button of buttons) {
-                try {
-                    button.click();
-                    totalUnbookmarked++;
-                    console.log(`🗑️ Unbookmarked ${ordinal(totalUnbookmarked)} tweet.`);
-                    await randomDelay(); // Longer cooldown
-                } catch (err) {
-                    console.warn("⚠️ Failed to click a bookmark button:", err);
-                }
+            if (chunkCounter >= 10) {
+                console.log("⏸️ Pausing for 10 seconds...");
+                await chunkPause();
+                chunkCounter = 0;
             }
-
-            iterationCount++;
-            console.log("📜 Loading next page...");
-            await scrollOneViewport();
         }
 
         console.log(`🎉 Done! Unbookmarked ${totalUnbookmarked} tweet(s).`);
