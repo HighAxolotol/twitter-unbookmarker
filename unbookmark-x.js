@@ -1,6 +1,6 @@
 (function unbookmarkAll() {
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const randomDelay = () => delay(1800 + Math.random() * 1000); // 1.8–2.8 seconds
+    const randomDelay = () => delay(5000 + Math.random() * 1000); // 5–6 seconds
 
     async function scrollOneViewport() {
         const viewportHeight = window.innerHeight;
@@ -41,7 +41,7 @@
                     button.click();
                     totalUnbookmarked++;
                     console.log(`🗑️ Unbookmarked ${ordinal(totalUnbookmarked)} tweet.`);
-                    await randomDelay(); // Randomized cooldown
+                    await randomDelay(); // Longer cooldown
                 } catch (err) {
                     console.warn("⚠️ Failed to click a bookmark button:", err);
                 }
